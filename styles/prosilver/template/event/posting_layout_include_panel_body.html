@@ -1,0 +1,57 @@
+<div class="panel bg3 panel-container" id="draft-panel">
+	<span id="draft-routing" class="hide" data-save="{{ SAVE_URL }}" data-view="{{ VIEW_URL }}" data-delete="{{ DELETE_URL }}"></span>
+	<div class="panel">
+	<div class="inner">
+		<ul class="topiclist missing-column">
+			<li class="header">
+				<dl>
+					<dt><div class="list-inner">{{ DRAFT_TYPE }}</div></dt>
+					<dd class="info"><span>{L_SAVE_DATE}</span></dd>
+				</dl>
+			</li>
+		</ul>
+
+	<ul id="draft-list" class="topiclist cplist missing-column">
+
+	<!-- BEGIN autodraft_row -->
+		<li id='draft{{ autodraft_row.ID }}' data-time="{{ autodraft_row.TIME }}" class="draft-row row{% if autodraft_row.LOADED_DRAFT %} current-draft{% endif %}{% if autodraft_row.S_ROW_COUNT is odd %} bg1{% else %} bg2{% endif %}">
+			<dl>
+				<dt>
+					<div class="list-inner">
+						<a class="topictitle view-draft" href="{{ autodraft_row.URL_VIEW }}">{{ autodraft_row.SUBJECT }}</a><br />
+						<span class="current-text">Current Draft</span>
+						<div class="responsive-show" style="display: none;">
+							{{ lang('SAVE_DATE') }}{{ lang('COLON') }} <strong class="draft-time"><span class="draft-date">{{ autodraft_row.DATE }}</span></strong><br />
+							<a class="view-draft" href="{{ autodraft_row.URL_VIEW }}">View/Load</a> &bull; <a class="delete-draft" href="{{ autodraft_row.URL_DELETE }}" data-ajax="ctc.draft_remove">Delete</a>
+						</div>
+					</div>
+				</dt>
+				<dd class="info">
+					<span><span class="draft-date">{{ autodraft_row.DATE }}</span><br /><a class="view-draft" href="{{ autodraft_row.URL_VIEW }}">View/Load</a> &bull; <a class="delete-draft" href="{{ autodraft_row.URL_DELETE }}" data-ajax="ctc.draft_remove">Delete</a></span>
+				</dd>
+			</dl>
+		</li>
+	<!-- END autodraft_row -->
+	</ul>
+	<template id="draft-template">
+		<li id='draft' class="draft-row row">
+			<dl>
+				<dt>
+					<div class="list-inner">
+						<a class="topictitle view-draft" href=""></a><br />
+						<span class="current-text">Current Draft</span>
+						<div class="responsive-show" style="display: none;">
+							{{ lang('SAVE_DATE') }}{{ lang('COLON') }} <strong class="draft-time"><span class="draft-date"></span></strong><br />
+							<a class="view-draft" href="">View/Load</a> &bull; <a class="delete-draft" href="" data-ajax="true">Delete</a>
+						</div>
+					</div>
+				</dt>
+				<dd class="info">
+					<span><span class="draft-date"></span><br /><a class="view-draft" href="">View/Load</a> &bull; <a class="delete-draft" href="" data-ajax="true">Delete</a></span>
+				</dd>
+			</dl>
+		</li>
+	</template>
+	</div>
+	</div>
+</div>

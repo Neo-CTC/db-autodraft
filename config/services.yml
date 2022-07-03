@@ -1,0 +1,24 @@
+services:
+    crosstimecafe.dbautodraft.controller.main:
+        class: crosstimecafe\dbautodraft\controller\main_controller
+        arguments:
+            - '@controller.helper'
+            - '@template'
+            - '@language'
+            - '@user'
+            - '@request'
+            - '@dbal.conn'
+            - '@auth'
+
+    crosstimecafe.dbautodraft.listener:
+        class: crosstimecafe\dbautodraft\event\main_listener
+        arguments:
+            - '@language'
+            - '@controller.helper'
+            - '@template'
+            - '%core.php_ext%'
+            - '@user'
+            - '@dbal.conn'
+        tags:
+            - { name: event.listener }
+

@@ -1,0 +1,22 @@
+{% INCLUDE 'simple_header.html' %}
+{% INCLUDECSS '@crosstimecafe_dbautodraft/drafts.css' %}
+{% INCLUDEJS '@crosstimecafe_dbautodraft/preview.js' %}
+{% if not ERROR %}
+<h2>{{ SUBJECT }}</h2>
+{{ TIME }}
+<hr>
+<p>
+	{{ MESSAGE }}
+</p>
+<div class="panel bg2 bottom-bar">
+	<div class="inner">
+		<fieldset class="submit-buttons">
+			<input id="load_draft" type="button" value="Load Draft" class="button1" data-link="{{ LOAD_LINK }}"> <input id="close_preview" type="button" value="Cancel" class="button2">
+		</fieldset>
+	</div>
+</div>
+{% else %}
+<h2>Error</h2>
+{{ ERROR }}
+{% endif %}
+{% INCLUDE 'simple_footer.html' %}

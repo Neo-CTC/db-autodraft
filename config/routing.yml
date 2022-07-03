@@ -1,0 +1,11 @@
+crosstimecafe_dbautodraft_save:
+    path: /autodraft/save
+    defaults: { _controller: crosstimecafe.dbautodraft.controller.main:save }
+
+crosstimecafe_dbautodraft_load:
+    path: /autodraft/preview
+    defaults: { _controller: crosstimecafe.dbautodraft.controller.main:preview }
+
+crosstimecafe_dbautodraft_delete:
+    path: /autodraft/delete
+    defaults: { _controller: crosstimecafe.dbautodraft.controller.main:delete }

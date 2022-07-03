@@ -1,0 +1,19 @@
+.view-draft, .delete-draft {
+	cursor: pointer;
+}
+ul#draft-list li.current-draft {
+	border: khaki outset 4px;
+}
+
+/* Hide "current draft" unless current draft */
+.current-text{
+	display: none;
+}
+.current-draft .current-text{
+	display: unset;
+}
+
+.bottom-bar {
+	position: sticky;
+	bottom: 0;
+}
