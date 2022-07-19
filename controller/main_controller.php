@@ -113,31 +113,12 @@ class main_controller
 
 	public function save()
 	{
-		$result = $this->save_draft();
-		$this->json->send($result);
-		// $this->template->assign_var('JSON', json_encode($result));
-		// return $this->helper->render('@crosstimecafe_dbautodraft/dbautodraft_body.html', 'Title?');
-	}
-
-	private function save_draft()
-	{
 		// Referenced posting.php as a guide
 
-		if (!check_form_key('posting'))
+		if (!$this->user->data['is_registered'] || !check_form_key('posting') || !$this->auth->acl_get('u_savedrafts'))
 		{
-			return ['error' => 'Nope'];
-		}
-
-		// Skip non-users
-		if (!$this->user->data['is_registered'])
-		{
-			return ['error' => 'Non-user'];
-		}
-
-		// Can't save a draft if we can't save a draft
-		if (!$this->auth->acl_get('u_savedrafts'))
-		{
-			return ['error' => 'Missing save draft permission'];
+			$this->json->send(['error' => true]);
+			return;
 		}
 
 		// Assign variables
@@ -147,11 +128,12 @@ class main_controller
 		$mode     = $this->request->variable('mode', '');
 		$draft_id = $this->request->variable('d', 0);
 
-		/* Todo: At the moment rely on the user to send send us the draft id. If no id we create a new draft
-		*   or if set reuse an old one. However, the draft id is lost between page refreshes and previews.
-		*   Either fix that or fetch an old id from the database. If we reuse and old id, then we can only save
-		*   one draft per forum or topic
-		*/
+		// Nowhere to put draft
+		if ($topic_id === 0 && $forum_id === 0 && $post_id === 0)
+		{
+			$this->json->send(['error' => true]);
+			return;
+		}
 
 		// Find forum & topic id from post id
 		if ($post_id)
@@ -182,11 +164,6 @@ class main_controller
 			// Todo: What if, bad topic id?
 		}
 
-		// Nowhere to put draft
-		if ($topic_id === 0 && $forum_id === 0 && $post_id === 0)
-		{
-			return ['error' => $this->language->lang('NO_POST')];
-		}
 
 		/*
 		 * Now we can check permissions
@@ -195,7 +172,8 @@ class main_controller
 		// Can we even view the forum?
 		if (!$this->auth->acl_get('f_read', $forum_id))
 		{
-			return ['error' => $this->language->lang('USER_CANNOT_READ')];
+			$this->json->send(['error' => true]);
+			return;
 		}
 
 		// Permission checking for different modes
@@ -205,7 +183,8 @@ class main_controller
 			case 'post':
 				if (!$this->auth->acl_get('f_post', $forum_id))
 				{
-					return ['error' => $this->language->lang('USER_CANNOT_POST')];
+					$this->json->send(['error' => true]);
+					return;
 				}
 			break;
 
@@ -214,12 +193,14 @@ class main_controller
 			case 'reply':
 				if (!$this->auth->acl_get('f_reply', $forum_id))
 				{
-					return ['error' => $this->language->lang('USER_CANNOT_REPLY')];
+					$this->json->send(['error' => true]);
+					return;
 				}
 			break;
 
 			default:
-				return ['error' => 'Missing or unhandled mode'];
+				$this->json->send(['error' => 'Missing or unhandled mode']);
+				return;
 		}
 
 		// Todo: permissions event?
@@ -246,7 +227,7 @@ class main_controller
 			 * You know what? This is all getting saved as a draft. I'm skipping all bbcode checks
 			 * unless someone says otherwise
 			 */
-			// To do: get post settings from config and from post editor
+			// Todo: get post settings from config and from post editor
 			$allow_bbcode       = true;
 			$allow_urls         = true;
 			$allow_smilies      = true;
@@ -254,7 +235,7 @@ class main_controller
 			$allow_flash_bbcode = true;
 			$allow_quote_bbcode = true;
 			$allow_url_bbcode   = true;
-			// To do: BBCode events
+			// Todo: BBCode events
 
 			// Not used but generate_text_for_storage wants them
 			$uid = $bitfield = $flags = '';
@@ -303,24 +284,14 @@ class main_controller
 				WHERE draft_id = ' . $draft_id . ' AND  user_id = ' . $this->user->id();
 				$this->db->sql_query($sql);
 			}
-			return [
+			$this->json->send([
 				'draft_id' => $draft_id,
-				'topic_id' => $topic_id !== 0 ? $topic_id : 0, // Todo: not needed?
 				'time'     => $save_time,
 				'date'     => $save_date,
-			];
+			]);
+			return;
 		}
-
-		$err = [];
-		if (utf8_strlen($subject) === 0)
-		{
-			$err[] = $this->language->lang('EMPTY_SUBJECT');
-		}
-		if (utf8_strlen($message) === 0)
-		{
-			$err[] = $this->language->lang('TOO_FEW_CHARS');
-		}
-		return ['error' => $err];
+		$this->json->send(['error' => true]);
 	}
 
 	public function delete()

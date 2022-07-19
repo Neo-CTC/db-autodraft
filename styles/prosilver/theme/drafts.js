@@ -147,22 +147,24 @@ function autodraft() {
 		}
 
 		// Save draft
-		$.post(routing.attr('data-save'), postData, function(response) {
-			if ('error' in response) {
-				// Todo: finish error messages
-			}
-			if ('draft_id' in response) {
-				draftID = Number(response['draft_id']);
-				updateDraftList(response);
+		$.post({
+			url: routing.attr('data-save'),
+			data: postData,
+			dataType: 'json',
+			timeout: 5000,
+			success: function(response){
+				if ('error' in response) {
+					// Todo: finish error messages
+				}
+				if ('draft_id' in response) {
+					draftID = Number(response['draft_id']);
+					updateDraftList(response);
 
-				// Push draft id to the current page's history. This helps to recover from page refreshing
-				history.replaceState(null, '', updateURL(location.href))
-			}
-			if ('topic_id' in response) {
-				// Todo: not needed?
-				topicID = response['topic_id'];
-			}
-		}, 'json')
+					// Push draft id to the current page's history. This helps to recover from page refreshing
+					history.replaceState(null, '', updateURL(location.href))
+				}
+			},
+		})
 	}
 }
 
@@ -186,7 +188,7 @@ let draftID = Number(params.get('d'));
 if(draftID === 0){
 	let draft_loaded = $('[name="draft_loaded"]')
 	if(draft_loaded.length === 1){
-		draftID = Number($('[name="draft_loaded"]').attr('value'))
+		draftID = Number(draft_loaded.attr('value'))
 	}
 }
 
