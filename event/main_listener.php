@@ -40,6 +40,7 @@ class main_listener implements EventSubscriberInterface
 	protected $php_ext;
 	private $db;
 	private $user;
+	private $request;
 
 	/**
 	 * Constructor
@@ -49,7 +50,7 @@ class main_listener implements EventSubscriberInterface
 	 * @param \phpbb\template\template $template Template object
 	 * @param string                   $php_ext  phpEx
 	 */
-	public function __construct(language $language, helper $helper, template $template, $php_ext, user $user, driver_interface $db)
+	public function __construct(language $language, helper $helper, template $template, $php_ext, user $user, driver_interface $db, request $request)
 	{
 		$this->language = $language;
 		$this->helper   = $helper;
@@ -57,6 +58,7 @@ class main_listener implements EventSubscriberInterface
 		$this->php_ext  = $php_ext;
 		$this->user     = $user;
 		$this->db       = $db;
+		$this->request  = $request;
 	}
 
 	public function populate_draft_panel($event)
@@ -68,18 +70,30 @@ class main_listener implements EventSubscriberInterface
 			return;
 		}
 
-		// Skip non-users
+		// Skip non-users should guest posting be enabled
 		if (!$this->user->data['is_registered'])
 		{
 			return;
 		}
 
-		if ($event['topic_id'])
+		// Load variables so we are not polling the event variable
+		$forum_id = $event['forum_id'];
+		$topic_id = $event['topic_id'];
+		$mode     = $event['mode'];
+
+		$draft_id = $event['draft_id'];
+		// Try getting id from hidden field
+		if ($draft_id === 0)
+		{
+			$draft_id = $this->request->variable('draft_loaded', 0);
+		}
+
+		if ($topic_id)
 		{
 			// Fetch reply drafts
 			$this->template->assign_var('DRAFT_TYPE', 'Reply drafts');
 			$sql = 'FROM ' . DRAFTS_TABLE . '
-				WHERE user_id = ' . $this->user->id() . ' AND topic_id = ' . $event['topic_id'] . ' ORDER BY save_time DESC';
+				WHERE user_id = ' . $this->user->id() . ' AND topic_id = ' . $topic_id . ' ORDER BY save_time DESC';
 		}
 
 		else
@@ -87,7 +101,7 @@ class main_listener implements EventSubscriberInterface
 			// Fetch new post drafts
 			$this->template->assign_var('DRAFT_TYPE', 'New topic drafts');
 			$sql = 'FROM ' . DRAFTS_TABLE . '
-				WHERE user_id = ' . $this->user->id() . ' AND topic_id = 0 AND forum_id = ' . $event['forum_id'] . ' ORDER BY save_time DESC';
+				WHERE user_id = ' . $this->user->id() . ' AND topic_id = 0 AND forum_id = ' . $forum_id . ' ORDER BY save_time DESC';
 		}
 		$result = $this->db->sql_query('SELECT * ' . $sql);
 
@@ -97,24 +111,24 @@ class main_listener implements EventSubscriberInterface
 		$this->template->assign_var('TOTAL_DRAFTS', $count);
 		$this->db->sql_freeresult($result_count);
 
-		while ($draft = $this->db->sql_fetchrow($result))
+		while ($row = $this->db->sql_fetchrow($result))
 		{
 			$this->template->assign_block_vars('autodraft_row', [
-				'SUBJECT'      => $draft['draft_subject'],
-				'DATE'         => $this->user->format_date($draft['save_time']),
-				'ID'           => $draft['draft_id'],
-				'LOADED_DRAFT' => $event['draft_id'] == $draft['draft_id'],
+				'SUBJECT'      => $row['draft_subject'],
+				'DATE'         => $this->user->format_date($row['save_time']),
+				'ID'           => $row['draft_id'],
+				'LOADED_DRAFT' => $draft_id == $row['draft_id'],
 				'URL_VIEW'     => $this->helper->route('crosstimecafe_dbautodraft_load', [
-					'd'    => $draft['draft_id'],
-					't'    => $event['topic_id'],
-					'f'    => $event['forum_id'],
-					'mode' => $event['mode'],
+					'd'    => $row['draft_id'],
+					't'    => $topic_id,
+					'f'    => $forum_id,
+					'mode' => $mode,
 				], false),
 				'URL_DELETE'   => $this->helper->route('crosstimecafe_dbautodraft_delete', [
-					'd'    => $draft['draft_id'],
-					't'    => $event['topic_id'],
-					'f'    => $event['forum_id'],
-					'mode' => $event['mode'],
+					'd'    => $row['draft_id'],
+					't'    => $topic_id,
+					'f'    => $forum_id,
+					'mode' => $mode,
 				], false),
 			]);
 		}
@@ -125,15 +139,15 @@ class main_listener implements EventSubscriberInterface
 		$this->template->assign_var('SAVE_URL', $this->helper->route('crosstimecafe_dbautodraft_save'));
 		$this->template->assign_var('VIEW_URL', $this->helper->route('crosstimecafe_dbautodraft_load', [
 			'd'    => '0',
-			't'    => $event['topic_id'],
-			'f'    => $event['forum_id'],
-			'mode' => $event['mode'],
+			't'    => $topic_id,
+			'f'    => $forum_id,
+			'mode' => $mode,
 		], false, false, 0));
 		$this->template->assign_var('DELETE_URL', $this->helper->route('crosstimecafe_dbautodraft_delete', [
 			'd'    => '0',
-			't'    => $event['topic_id'],
-			'f'    => $event['forum_id'],
-			'mode' => $event['mode'],
+			't'    => $topic_id,
+			'f'    => $forum_id,
+			'mode' => $mode,
 		], false, false, 0));
 	}
 }

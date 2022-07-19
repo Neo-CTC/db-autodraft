@@ -123,6 +123,11 @@ class main_controller
 	{
 		// Referenced posting.php as a guide
 
+		if (!check_form_key('posting'))
+		{
+			return ['error' => 'Nope'];
+		}
+
 		// Skip non-users
 		if (!$this->user->data['is_registered'])
 		{

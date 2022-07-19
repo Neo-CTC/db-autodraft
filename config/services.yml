@@ -19,6 +19,7 @@ services:
             - '%core.php_ext%'
             - '@user'
             - '@dbal.conn'
+            - '@request'
         tags:
             - { name: event.listener }
 

@@ -80,9 +80,15 @@ function updateDraftList(response = false) {
 		draft.find('.draft-date').each(function() {
 			this.innerHTML = date;
 		})
+
+		// Update subject
+		let currentSubject = draft.find('.topictitle')
+		if (currentSubject.text() !== subjectDraft){
+			currentSubject.text(subjectDraft)
+		}
 	}
 
-	// Add/update hidden input field
+	// Add/update hidden input field to carry draft id between page views
 	let input = $('input[name="draft_loaded"]');
 	if (input.length === 0) {
 		$('.submit-buttons').prepend('<input type="hidden" name="draft_loaded" value="' + id + '">');
@@ -135,7 +141,9 @@ function autodraft() {
 			t: topicID,
 			p: postID,
 			mode: mode,
-			d: draftID
+			d: draftID,
+			creation_time: $('[name="creation_time"]').attr('value'),
+			form_token: $('[name="form_token"]').attr('value'),
 		}
 
 		// Save draft
@@ -154,13 +162,6 @@ function autodraft() {
 				// Todo: not needed?
 				topicID = response['topic_id'];
 			}
-
-			// Find a matching draft in the list
-
-
-			// No draft found, add it to the list
-
-			// Highlight the draft in the list
 		}, 'json')
 	}
 }
@@ -179,11 +180,20 @@ let forumID = params.get('f');
 let topicID = params.get('t');
 let postID = params.get('p');
 let mode = params.get('mode');
+
+// Try to get id from parameter or element
 let draftID = Number(params.get('d'));
+if(draftID === 0){
+	let draft_loaded = $('[name="draft_loaded"]')
+	if(draft_loaded.length === 1){
+		draftID = Number($('[name="draft_loaded"]').attr('value'))
+	}
+}
 
 // Grab URLs from routing element
 let routing = $('#draft-routing');
 
+// Set up repeating timer to save drafts
 let draftTimer = setInterval(autodraft, 10000)
 
 
